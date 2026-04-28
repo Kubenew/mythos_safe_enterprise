@@ -1,0 +1,6 @@
+apiVersion: v2
+name: mythos-safe
+version: 1.0.0
+appVersion: "1.0.0"
+description: Mythos-Safe Enterprise MVP - AI Safety & Evaluation Platform
+type: application

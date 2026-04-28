@@ -1,0 +1,61 @@
+# Default values for mythos-safe
+# This is a YAML-formatted file.
+
+replicaCount: 1
+
+image:
+  repository: mythos-safe
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  automount: true
+
+podAnnotations: {}
+
+podSecurityContext: {}
+
+securityContext: {}
+
+service:
+  type: ClusterIP
+  port: 8000
+
+ingress:
+  enabled: false
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+autoscaling:
+  enabled: false
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# PostgreSQL
+postgresql:
+  enabled: true
+  auth:
+    username: mythos
+    password: mythos123
+    database: mythos_safe
+
+# Redis
+redis:
+  enabled: true
+  auth:
+    password: ""
