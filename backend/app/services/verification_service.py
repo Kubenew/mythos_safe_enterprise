@@ -6,6 +6,7 @@ from app.verifiers.cyber_defensive import (
     PatchVerifier,
 )
 
+
 class VerificationService:
     def __init__(self):
         self.vuln_scanner = VulnerabilityScannerVerifier()

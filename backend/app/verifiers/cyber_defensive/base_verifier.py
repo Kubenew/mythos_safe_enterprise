@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Dict, Any
 
+
 class BaseVerifier(ABC):
     """Base class for all Mythos++ verifiers."""
 

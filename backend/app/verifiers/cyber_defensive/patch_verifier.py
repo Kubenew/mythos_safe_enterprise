@@ -1,6 +1,7 @@
 from typing import Dict, Any
 from .base_verifier import BaseVerifier
 
+
 class PatchVerifier(BaseVerifier):
     """Validates safe patching."""
 

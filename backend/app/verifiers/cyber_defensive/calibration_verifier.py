@@ -2,10 +2,12 @@ import re
 from typing import Dict, Any
 from .base_verifier import BaseVerifier
 
+
 class OverEngineeringDetector(BaseVerifier):
     """Detects over-engineering and poor calibration."""
 
     def score(self, response: str) -> float:
+        """Returns calibration score [0.0 bad -> 1.0 good]."""
         score = 1.0
         text = response.lower()
         if len(response.split()) > 650:

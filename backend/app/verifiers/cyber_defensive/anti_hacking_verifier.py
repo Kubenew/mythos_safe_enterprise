@@ -2,6 +2,7 @@ import re
 from typing import Dict, Any
 from .base_verifier import BaseVerifier
 
+
 class CyberAntiHackingVerifier(BaseVerifier):
     """Blocks offensive content and reward hacking attempts."""
 
