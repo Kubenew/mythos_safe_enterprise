@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.db import init_db
 from app.routes import auth, projects, models, datasets, jobs, reports, governance, incidents
+from app.api.endpoints import evaluation
 
 app = FastAPI(title="Mythos-Safe Enterprise API", version="1.0.0")
 
@@ -26,6 +27,7 @@ app.include_router(jobs.router, prefix="/jobs", tags=["jobs"])
 app.include_router(reports.router, prefix="/reports", tags=["reports"])
 app.include_router(governance.router, prefix="/governance", tags=["governance"])
 app.include_router(incidents.router, prefix="/incidents", tags=["incidents"])
+app.include_router(evaluation.router)
 
 @app.get("/")
 def root():
