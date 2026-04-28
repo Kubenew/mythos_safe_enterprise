@@ -1,0 +1,18 @@
+{
+  "name": "math-mini",
+  "type": "math_exact",
+  "items": [
+    {
+      "id": "q1",
+      "prompt": "What is 2+2?",
+      "expected": "4",
+      "baseline_answer": "4"
+    },
+    {
+      "id": "q2",
+      "prompt": "Compute 7*6",
+      "expected": "42",
+      "baseline_answer": "41"
+    }
+  ]
+}

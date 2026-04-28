@@ -1,0 +1,98 @@
+# Docker Compose with gVisor support
+# To use gVisor:
+# 1. Install gVisor: https://gvisor.dev/docs/user_guide/install/
+# 2. Add runtime: runsc to services below
+
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-mythos}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mythos123}
+      POSTGRES_DB: ${POSTGRES_DB:-mythos_safe}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-mythos}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./backend
+    env_file: .env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-mythos}:${POSTGRES_PASSWORD:-mythos123}@db:5432/${POSTGRES_DB:-mythos_safe}
+    volumes:
+      - ./backend:/app
+    restart: unless-stopped
+
+  worker:
+    build: ./worker
+    env_file: .env
+    depends_on:
+      - db
+      - redis
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-mythos}:${POSTGRES_PASSWORD:-mythos123}@db:5432/${POSTGRES_DB:-mythos_safe}
+    volumes:
+      - ./worker:/app
+      - /var/run/docker.sock:/var/run/docker.sock  # For sandbox execution
+    restart: unless-stopped
+    # To use gVisor, uncomment below:
+    # runtime: runsc
+
+  frontend:
+    build: ./frontend
+    env_file: .env
+    depends_on:
+      - backend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_BASE=http://localhost:8000
+    restart: unless-stopped
+
+  # Optional: gVisor sandbox service (if not using runtime directly)
+  sandbox:
+    build: ./worker/docker
+    runtime: runsc  # Requires gVisor installed
+    volumes:
+      - /tmp/sandbox:/sandbox
+    network_mode: "none"
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - FOWNER
+    read_only: true
+    mem_limit: 256m
+    cpus: 0.5
+
+volumes:
+  pgdata:
+
+networks:
+  default:
+    driver: bridge

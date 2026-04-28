@@ -1,0 +1,44 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "panels": [
+    {
+      "title": "Job Success Rate",
+      "type": "graph",
+      "targets": [
+        {
+          "expr": "sum(rate(jobs_total{status=\"done\"}[5m])) / sum(rate(jobs_total[5m])) * 100",
+          "legendFormat": "Success Rate %"
+        }
+      ]
+    },
+    {
+      "title": "Jobs per Second",
+      "type": "graph",
+      "targets": [
+        {
+          "expr": "rate(jobs_total[5m])",
+          "legendFormat": "Jobs/s"
+        }
+      ]
+    },
+    {
+      "title": "Worker CPU Usage",
+      "type": "graph",
+      "targets": [
+        {
+          "expr": "process_cpu_percent{job=\"mythos-worker\"}",
+          "legendFormat": "CPU %"
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 12,
+  "title": "Mythos-Safe Overview",
+  "templating": {"list": []},
+  "time": {"from": "now-1h", "to": "now"},
+  "timepicker": {},
+  "timezone": ""
+}
