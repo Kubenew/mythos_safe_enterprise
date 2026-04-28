@@ -73,22 +73,33 @@ services:
       - NEXT_PUBLIC_API_BASE=http://localhost:8000
     restart: unless-stopped
 
-  # Optional: gVisor sandbox service (if not using runtime directly)
-  sandbox:
-    build: ./worker/docker
-    runtime: runsc  # Requires gVisor installed
-    volumes:
-      - /tmp/sandbox:/sandbox
-    network_mode: "none"
-    cap_drop:
-      - ALL
-    cap_add:
-      - CHOWN
-      - DAC_OVERRIDE
-      - FOWNER
+  # gVisor sandbox service for Cyber Evaluations
+  cyber-sandbox:
+    build:
+      context: ./docker
+      dockerfile: cyber-sandbox.Dockerfile
+    image: mythos-safe/cyber-sandbox:gvisor
+    security_opt:
+      - label:gvisor  # Enables gVisor sandboxing (stronger isolation)
     read_only: true
-    mem_limit: 256m
-    cpus: 0.5
+    tmpfs:
+      - /tmp:size=64M
+    mem_limit: 512m
+    cpus: "1.0"
+    restart: unless-stopped
+    networks:
+      - internal
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./test_cases:/sandbox/test_cases:ro
+
+networks:
+  default:
+    driver: bridge
+  internal:
+    driver: bridge
+    internal: true
 
 volumes:
   pgdata:
