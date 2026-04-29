@@ -11,12 +11,16 @@ celery==5.4.0
 redis==5.0.8
 prometheus-client==0.21.0
 
-# Cyber defensive verifiers
-docker>=7.0.0
-semgrep>=1.80.0
-bandit
-pyright
+# Reporting
+reportlab>=4.0.0
+jinja2>=3.1.0
 
-# Optional but recommended
-wandb>=0.17.0          # For experiment tracking during RLVR
-nnsight>=0.2.0         # For future interpretability hooks
+# Testing
+httpx>=0.27.0
+pytest>=8.0.0
+pytest-asyncio>=0.23.0
+
+# Cyber defensive verifiers (optional - install if running cyber evals)
+# docker>=7.0.0
+# semgrep>=1.80.0
+# bandit

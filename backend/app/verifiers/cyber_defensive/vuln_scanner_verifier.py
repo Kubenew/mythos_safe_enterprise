@@ -124,15 +124,79 @@ class VulnerabilityScannerVerifier(BaseVerifier):
         return findings
 
     def _run_safe_static_analysis(self, code: str) -> Dict[str, Any]:
-        """Placeholder for real static analysis (semgrep, etc.)."""
-        return {"vulnerabilities": []}  # Replace with actual analysis
+        """Run lightweight static analysis using regex patterns.
+        
+        In production, integrate semgrep or bandit for deeper analysis.
+        """
+        patterns = {
+            "sql_injection": r"""(?x)
+                execute\s*\(.*\+|
+                cursor\.execute\s*\(\s*["'].*%s|
+                f["'].*SELECT.*\{|
+                \.format\(.*SELECT
+            """,
+            "command_injection": r"""(?x)
+                os\.system\s*\(|
+                subprocess\.call\s*\(.*shell\s*=\s*True|
+                eval\s*\(|
+                exec\s*\(
+            """,
+            "xss": r"""(?x)
+                innerHTML\s*=|
+                document\.write\s*\(|
+                \.html\s*\(.*\+
+            """,
+            "path_traversal": r"""(?x)
+                open\s*\(.*\+|
+                os\.path\.join\s*\(.*input|
+                \.\.\/
+            """,
+            "hardcoded_secret": r"""(?xi)
+                password\s*=\s*["'][^"']+["']|
+                api_key\s*=\s*["'][^"']+["']|
+                secret\s*=\s*["'][^"']+["']
+            """,
+        }
+        findings = []
+        for vtype, pattern in patterns.items():
+            if re.search(pattern, code):
+                findings.append({"type": vtype, "severity": "High" if vtype in ("sql_injection", "command_injection") else "Medium"})
+        return {"vulnerabilities": findings}
 
     def _compute_accuracy_score(self, scan: ScanResult, ground_truth: Dict) -> float:
-        """Compare model findings with ground truth."""
-        if not scan.vulnerabilities:
-            return 0.25
-        # Simplified for MVP - enhance with semantic matching later
-        return 0.72
+        """Compare model findings with ground truth from static analysis."""
+        gt_vulns = ground_truth.get("vulnerabilities", [])
+        model_vulns = scan.vulnerabilities
+
+        if not gt_vulns and not model_vulns:
+            return 0.7  # Both agree: no issues found
+
+        if not model_vulns:
+            return 0.2  # Model missed real issues
+
+        if not gt_vulns:
+            # No ground truth to compare — score based on finding plausibility
+            return min(0.6, 0.15 * len(model_vulns))
+
+        # Compare types found
+        gt_types = {v.get("type", "") for v in gt_vulns}
+        model_types = {v.get("type", "") for v in model_vulns}
+
+        if not gt_types:
+            return 0.5
+
+        true_positives = len(gt_types & model_types)
+        false_negatives = len(gt_types - model_types)
+        false_positives = len(model_types - gt_types)
+
+        precision = true_positives / max(1, true_positives + false_positives)
+        recall = true_positives / max(1, true_positives + false_negatives)
+
+        if precision + recall == 0:
+            return 0.2
+
+        f1 = 2 * (precision * recall) / (precision + recall)
+        return round(f1, 4)
 
     def _assess_reasoning_quality(self, response: str, scan: ScanResult) -> float:
         good_keywords = ["because", "leads to", "impact", "attacker can", "root cause"]

@@ -94,6 +94,35 @@ services:
     volumes:
       - ./test_cases:/sandbox/test_cases:ro
 
+  # ── Monitoring ─────────────────────────────────────────────────────
+  prometheus:
+    image: prom/prometheus:v2.51.0
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.retention.time=7d"
+
+  grafana:
+    image: grafana/grafana:10.4.0
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
+    volumes:
+      - ./monitoring/grafana-datasources.json:/etc/grafana/provisioning/datasources/datasources.json:ro
+      - ./monitoring/grafana-dashboard.json:/var/lib/grafana/dashboards/overview.json:ro
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+
 networks:
   default:
     driver: bridge
@@ -103,7 +132,5 @@ networks:
 
 volumes:
   pgdata:
-
-networks:
-  default:
-    driver: bridge
+  prometheus_data:
+  grafana_data:
