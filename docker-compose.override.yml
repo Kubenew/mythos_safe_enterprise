@@ -4,7 +4,7 @@ services:
   # PostgreSQL Database
   db:
     image: postgres:16-alpine
-    container_name: mythos-db-gvisor
+    container_name: mythos-db
     restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
@@ -20,10 +20,10 @@ services:
       timeout: 5s
       retries: 5
 
-  # Redis
+  # Redis (Broker + Result Backend)
   redis:
     image: redis:7-alpine
-    container_name: mythos-redis-gvisor
+    container_name: mythos-redis
     restart: unless-stopped
     ports:
       - "6379:6379"
@@ -34,10 +34,10 @@ services:
       timeout: 5s
       retries: 5
 
-  # FastAPI Backend
+  # FastAPI Backend (Development with Hot Reload)
   api:
     build: ./backend
-    container_name: mythos-api-gvisor
+    container_name: mythos-api
     restart: unless-stopped
     env_file: .env
     ports:
@@ -49,14 +49,15 @@ services:
         condition: service_healthy
     volumes:
       - ./backend:/app
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
-    security_opt:
-      - name: gvisor
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    environment:
+      - DEBUG=true
+      - LOG_LEVEL=DEBUG
 
-  # Celery Worker with gVisor
+  # Celery Worker (Development)
   worker:
     build: ./backend
-    container_name: mythos-worker-gvisor
+    container_name: mythos-worker
     restart: unless-stopped
     env_file: .env
     depends_on:
@@ -64,14 +65,12 @@ services:
       - redis
     volumes:
       - ./backend:/app
-    command: celery -A app.worker.worker worker --loglevel=info --concurrency=4
-    security_opt:
-      - name: gvisor
+    command: celery -A app.worker.worker worker --loglevel=DEBUG --concurrency=2
 
-  # Flower with gVisor
+  # Flower (Celery Monitoring Dashboard)
   flower:
     build: ./backend
-    container_name: mythos-flower-gvisor
+    container_name: mythos-flower
     restart: unless-stopped
     env_file: .env
     depends_on:
@@ -79,40 +78,29 @@ services:
     ports:
       - "5555:5555"
     command: celery -A app.worker.worker flower --port=5555
-    security_opt:
-      - name: gvisor
 
-  # Cyber Sandbox (Enhanced gVisor Protection)
+  # Secure Cyber Sandbox (with gVisor)
   cyber-sandbox:
     build:
       context: ./docker
       dockerfile: cyber-sandbox.Dockerfile
-    container_name: mythos-sandbox-gvisor
+    container_name: mythos-cyber-sandbox
     restart: unless-stopped
     security_opt:
-      - name: gvisor
+      - name: gvisor   # Strong isolation
     read_only: true
     tmpfs:
-      - /tmp:size=256M,noexec
-    mem_limit: 768m
-    cpus: "2.0"
+      - /tmp:size=128M
+    mem_limit: 512m
+    cpus: "1.0"
     volumes:
       - ./test_cases:/sandbox/test_cases:ro
     networks:
       - internal
-    cap_drop:
-      - ALL
-    cap_add:
-      - CHOWN
-      - DAC_OVERRIDE
-      - FOWNER
-      - SETGID
-      - SETUID
 
 networks:
   internal:
     driver: bridge
-    internal: true
 
 volumes:
   postgres_data:
