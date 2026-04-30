@@ -40,3 +40,37 @@ docker compose exec api alembic upgrade head
 
 # Test the system
 ./test_curl.sh
+
+Access:
+
+API Docs: http://localhost:8000/docs
+Celery Flower: http://localhost:5555
+
+
+🏗️ Production Deployment
+Bashdocker compose -f docker-compose.prod.yml up -d
+See PRODUCTION_DEPLOYMENT_CHECKLIST.md for detailed steps.
+
+📁 Project Structure
+
+backend/app/verifiers/cyber_defensive/ — Core safety logic
+backend/app/services/verification_service.py — Main evaluation service
+backend/app/worker/ — Celery tasks
+docker-compose.*.yml — Multiple deployment profiles
+test_cases/ — Sample vulnerable code for testing
+
+
+🛡️ Safety Philosophy
+All evaluations are strictly defensive. Any attempt to generate exploits, payloads, or harmful content results in immediate rejection (composite_reward = 0.0).
+This platform aims to help develop AI systems that strengthen defenders while minimizing dual-use risks.
+
+📄 Documentation
+
+GETTING_STARTED.md
+DEPLOYMENT.md
+ARCHITECTURE.md
+PRODUCTION_DEPLOYMENT_CHECKLIST.md
+
+
+Status: Production-ready scaffold with strong defensive cyber capabilities.
+Built with responsibility, transparency, and safety at the core.
