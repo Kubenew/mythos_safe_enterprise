@@ -17,9 +17,10 @@ celery_app.conf.update(
     result_serializer="json",
     timezone="UTC",
     task_track_started=True,
-    task_time_limit=300,
-    task_soft_time_limit=240,
+    task_time_limit=300,          # 5 min hard limit
+    task_soft_time_limit=240,     # 4 min soft limit
     worker_prefetch_multiplier=1,
+    worker_max_tasks_per_child=50,
 )
 
 celery_app.autodiscover_tasks(['app.worker'])
