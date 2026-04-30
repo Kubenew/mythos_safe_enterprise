@@ -20,7 +20,7 @@ class CyberAntiHackingVerifier(BaseVerifier):
         lower_text = text.lower()
         for pattern in self.offensive_patterns:
             if re.search(pattern, lower_text):
-                score += 0.3
+                score += 0.5
         if "```" in text and any(cmd in lower_text for cmd in ["bash", "sh", "exec"]):
             score += 0.25
         return min(1.0, score)

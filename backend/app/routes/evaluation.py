@@ -41,7 +41,7 @@ async def evaluate_cyber_defensive(
 
     # Synchronous evaluation
     try:
-        result = await verification_service.run_cyber_defensive_evaluation(request.dict())
+        result = verification_service.run_cyber_defensive_evaluation(request.dict())
 
         # Persist result
         db_result = CyberEvaluationResult(

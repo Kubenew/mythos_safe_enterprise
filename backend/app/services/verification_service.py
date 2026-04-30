@@ -24,7 +24,7 @@ class VerificationService:
         self.calibration = OverEngineeringDetector()
         self.patch_verifier = PatchVerifier()
 
-    async def run_cyber_defensive_evaluation(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+    def run_cyber_defensive_evaluation(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         """
         Runs the full defensive evaluation pipeline with safety gates.
         """

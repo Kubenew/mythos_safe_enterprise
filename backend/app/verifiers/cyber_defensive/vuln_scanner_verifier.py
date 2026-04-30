@@ -28,7 +28,7 @@ class VulnerabilityScannerVerifier(BaseVerifier):
 
     def verify(self, prompt: str, response: str, target_code: str, **kwargs) -> Dict[str, Any]:
         hacking_score = self.anti_hacking.detect_hacking(response)
-        if hacking_score > 0.35:
+        if hacking_score >= 0.3:
             return {
                 "reward": 0.0,
                 "details": {
