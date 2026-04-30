@@ -1,136 +1,69 @@
-# Docker Compose with gVisor support
-# To use gVisor:
-# 1. Install gVisor: https://gvisor.dev/docs/user_guide/install/
-# 2. Add runtime: runsc to services below
+version: '3.9'
 
 services:
   db:
-    image: postgres:16
+    image: postgres:16-alpine
+    container_name: mythos-db
+    restart: unless-stopped
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-mythos}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mythos123}
-      POSTGRES_DB: ${POSTGRES_DB:-mythos_safe}
-    ports:
-      - "5432:5432"
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-mythos}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
 
   redis:
     image: redis:7-alpine
-    ports:
-      - "6379:6379"
-    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+    container_name: mythos-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
 
-  backend:
+  api:
     build: ./backend
+    container_name: mythos-api
+    restart: unless-stopped
     env_file: .env
+    ports:
+      - "8000:8000"
     depends_on:
       db:
         condition: service_healthy
       redis:
         condition: service_healthy
-    ports:
-      - "8000:8000"
-    environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-mythos}:${POSTGRES_PASSWORD:-mythos123}@db:5432/${POSTGRES_DB:-mythos_safe}
-    volumes:
-      - ./backend:/app
-    restart: unless-stopped
 
   worker:
-    build: ./worker
-    env_file: .env
-    depends_on:
-      - db
-      - redis
-    environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-mythos}:${POSTGRES_PASSWORD:-mythos123}@db:5432/${POSTGRES_DB:-mythos_safe}
-    volumes:
-      - ./worker:/app
-      - /var/run/docker.sock:/var/run/docker.sock  # For sandbox execution
+    build: ./backend
+    container_name: mythos-worker
     restart: unless-stopped
-    # To use gVisor, uncomment below:
-    # runtime: runsc
-
-  frontend:
-    build: ./frontend
     env_file: .env
-    depends_on:
-      - backend
+    command: celery -A app.worker.worker worker --loglevel=info --concurrency=4
+
+  flower:
+    build: ./backend
+    container_name: mythos-flower
+    restart: unless-stopped
+    env_file: .env
     ports:
-      - "3000:3000"
-    environment:
-      - NEXT_PUBLIC_API_BASE=http://localhost:8000
-    restart: unless-stopped
+      - "5555:5555"
+    command: celery -A app.worker.worker flower --port=5555
 
-  # gVisor sandbox service for Cyber Evaluations
   cyber-sandbox:
     build:
       context: ./docker
       dockerfile: cyber-sandbox.Dockerfile
-    image: mythos-safe/cyber-sandbox:gvisor
+    container_name: mythos-cyber-sandbox
+    restart: unless-stopped
     security_opt:
-      - label:gvisor  # Enables gVisor sandboxing (stronger isolation)
+      - name: gvisor
     read_only: true
     tmpfs:
-      - /tmp:size=64M
-    mem_limit: 512m
-    cpus: "1.0"
-    restart: unless-stopped
-    networks:
-      - internal
-    environment:
-      - PYTHONUNBUFFERED=1
+      - /tmp:size=256M,noexec
+    mem_limit: 768m
+    cpus: "2.0"
     volumes:
       - ./test_cases:/sandbox/test_cases:ro
 
-  # ── Monitoring ─────────────────────────────────────────────────────
-  prometheus:
-    image: prom/prometheus:v2.51.0
-    restart: unless-stopped
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      - prometheus_data:/prometheus
-    command:
-      - "--config.file=/etc/prometheus/prometheus.yml"
-      - "--storage.tsdb.retention.time=7d"
-
-  grafana:
-    image: grafana/grafana:10.4.0
-    restart: unless-stopped
-    ports:
-      - "3001:3000"
-    environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin
-      - GF_AUTH_ANONYMOUS_ENABLED=true
-      - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
-    volumes:
-      - ./monitoring/grafana-datasources.json:/etc/grafana/provisioning/datasources/datasources.json:ro
-      - ./monitoring/grafana-dashboard.json:/var/lib/grafana/dashboards/overview.json:ro
-      - grafana_data:/var/lib/grafana
-    depends_on:
-      - prometheus
-
-networks:
-  default:
-    driver: bridge
-  internal:
-    driver: bridge
-    internal: true
-
 volumes:
-  pgdata:
-  prometheus_data:
-  grafana_data:
+  postgres_data:
