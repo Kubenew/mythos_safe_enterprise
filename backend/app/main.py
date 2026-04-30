@@ -11,7 +11,7 @@ app = FastAPI(
     version="1.0.0",
 )
 
-# CORS Middleware
+# CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.BACKEND_CORS_ORIGINS,
@@ -20,19 +20,19 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include all routers
+# Routers
 app.include_router(auth.router, prefix=settings.API_V1_STR, tags=["auth"])
 app.include_router(users.router, prefix=settings.API_V1_STR, tags=["users"])
 app.include_router(evaluation.router, prefix=settings.API_V1_STR, tags=["evaluation"])
 
 @app.get("/health", tags=["health"])
 async def health_check():
-    return {"status": "healthy", "service": "mythos-safe-enterprise"}
+    return {"status": "healthy"}
 
 @app.get("/", tags=["root"])
 async def root():
     return {
-        "message": "Welcome to Mythos Safe Enterprise API",
+        "message": "Mythos Safe Enterprise API",
         "version": "1.0.0",
-        "documentation": "/docs"
+        "docs": "/docs"
     }
