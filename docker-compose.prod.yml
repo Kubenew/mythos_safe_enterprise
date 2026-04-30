@@ -1,7 +1,6 @@
 version: '3.9'
 
 services:
-  # Traefik Reverse Proxy + SSL
   traefik:
     image: traefik:v3.0
     container_name: mythos-traefik
@@ -18,13 +17,12 @@ services:
       - "--providers.docker.exposedbydefault=false"
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
-      - "--certificatesresolvers.letsencrypt.acme.email=your-email@example.com"
+      - "--certificatesresolvers.letsencrypt.acme.email=your-email@domain.com"
       - "--certificatesresolvers.letsencrypt.acme.storage=/data/acme.json"
       - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
       - "--api.dashboard=true"
       - "--log.level=INFO"
 
-  # PostgreSQL
   db:
     image: postgres:16-alpine
     container_name: mythos-db
@@ -41,7 +39,6 @@ services:
       timeout: 10s
       retries: 5
 
-  # Redis
   redis:
     image: redis:7-alpine
     container_name: mythos-redis
@@ -51,7 +48,6 @@ services:
       test: ["CMD", "redis-cli", "ping"]
       interval: 30s
 
-  # FastAPI Backend
   api:
     build: ./backend
     container_name: mythos-api
@@ -69,7 +65,6 @@ services:
       redis:
         condition: service_healthy
 
-  # Celery Worker
   worker:
     build: ./backend
     container_name: mythos-worker
@@ -80,7 +75,6 @@ services:
       - redis
     command: celery -A app.worker.worker worker --loglevel=info --concurrency=6
 
-  # Flower (Celery Dashboard)
   flower:
     build: ./backend
     container_name: mythos-flower
@@ -95,7 +89,6 @@ services:
       - "traefik.http.routers.flower.tls.certresolver=letsencrypt"
       - "traefik.http.services.flower.loadbalancer.server.port=5555"
 
-  # Secure Cyber Sandbox with gVisor
   cyber-sandbox:
     build:
       context: ./docker

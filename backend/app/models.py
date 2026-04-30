@@ -49,3 +49,26 @@ class Job(Base):
     logs = Column(Text, default="")
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     project = relationship("Project")
+
+class Incident(Base):
+    __tablename__ = "incidents"
+    id = Column(Integer, primary_key=True)
+    project_id = Column(Integer, nullable=False)
+    severity = Column(String(50), default="medium")
+    description = Column(Text, default="")
+    status = Column(String(50), default="open")
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+class GovernanceGate(Base):
+    __tablename__ = "governance_gates"
+    id = Column(Integer, primary_key=True)
+    project_id = Column(Integer, ForeignKey("projects.id"), nullable=False)
+    gate = Column(String(10), nullable=False)  # A, B, C, D
+    name = Column(String(200), nullable=False)
+    status = Column(String(50), default="pending")  # pending, passed, failed, blocked
+    notes = Column(Text, default="")
+    approved_by = Column(String(255), default="")
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    project = relationship("Project")
+

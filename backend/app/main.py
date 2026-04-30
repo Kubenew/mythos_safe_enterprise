@@ -1,10 +1,8 @@
+# backend/app/main.py
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
-from app.core.database import engine, Base
-
-# Import routers
 from app.api.endpoints import auth, users, evaluation
 
 app = FastAPI(
@@ -22,14 +20,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include routers
+# Routers
 app.include_router(auth.router, prefix=settings.API_V1_STR, tags=["auth"])
 app.include_router(users.router, prefix=settings.API_V1_STR, tags=["users"])
 app.include_router(evaluation.router, prefix=settings.API_V1_STR, tags=["evaluation"])
 
 @app.get("/health", tags=["health"])
 async def health_check():
-    return {"status": "healthy", "service": "mythos-safe-enterprise"}
+    return {"status": "healthy"}
 
 @app.get("/", tags=["root"])
 async def root():
@@ -38,8 +36,3 @@ async def root():
         "version": "1.0.0",
         "docs": "/docs"
     }
-
-# Optional: Create tables on startup (use migrations in production)
-# @app.on_event("startup")
-# async def startup():
-#     Base.metadata.create_all(bind=engine)

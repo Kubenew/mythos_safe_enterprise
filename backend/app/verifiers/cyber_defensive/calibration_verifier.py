@@ -2,10 +2,7 @@ import re
 from typing import Dict, Any
 from .base_verifier import BaseVerifier
 
-
 class OverEngineeringDetector(BaseVerifier):
-    """Detects over-engineering and poor calibration."""
-
     def score(self, response: str) -> float:
         score = 1.0
         text = response.lower()

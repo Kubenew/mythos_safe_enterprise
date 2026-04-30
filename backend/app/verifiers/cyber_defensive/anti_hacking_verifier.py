@@ -2,10 +2,7 @@ import re
 from typing import Dict, Any
 from .base_verifier import BaseVerifier
 
-
 class CyberAntiHackingVerifier(BaseVerifier):
-    """Blocks offensive content and reward hacking attempts."""
-
     def __init__(self):
         self.offensive_patterns = [
             r"(?i)\b(exploit|payload|shellcode|reverse.?shell|bind.?shell|malware)\b",

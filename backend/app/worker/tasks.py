@@ -1,3 +1,4 @@
+# backend/app/worker/tasks.py
 from celery import shared_task
 from sqlalchemy.orm import Session
 from app.core.database import SessionLocal
@@ -11,9 +12,8 @@ logger = logging.getLogger(__name__)
 verification_service = VerificationService()
 
 
-@shared_task(name="run_cyber_defensive_task", bind=True, max_retries=3, queue="cyber_evaluation")
+@shared_task(name="cyber_defensive_evaluation", bind=True, max_retries=3, queue="cyber_evaluation")
 def run_cyber_defensive_task(self, payload: dict, user_id: int):
-    """Async task for running heavy cyber defensive evaluations."""
     db: Session = SessionLocal()
     eval_id = payload.get("evaluation_id") or str(uuid4())
 
@@ -25,22 +25,22 @@ def run_cyber_defensive_task(self, payload: dict, user_id: int):
             user_id=user_id,
             prompt=payload["prompt"],
             target_code_hash=hashlib.sha256(payload["target_code"].encode()).hexdigest(),
-            composite_reward=result["composite_reward"],
+            composite_reward=result.get("composite_reward", 0.0),
             vuln_analysis=result.get("vuln_analysis"),
             patch_analysis=result.get("patch_analysis"),
             safety_analysis=result.get("safety"),
             calibration_analysis=result.get("calibration"),
-            status=result["status"]
+            status=result.get("status", "completed")
         )
 
         db.add(db_result)
         db.commit()
-        logger.info(f"Cyber evaluation completed: {eval_id} | Reward: {result['composite_reward']}")
 
-        return {"task_id": self.request.id, "evaluation_id": eval_id, "status": result["status"]}
+        logger.info(f"✅ Cyber evaluation completed: {eval_id} | Reward: {result.get('composite_reward', 0):.4f}")
+        return {"task_id": self.request.id, "evaluation_id": eval_id, "status": result.get("status")}
 
     except Exception as exc:
-        logger.error(f"Task failed for evaluation {eval_id}: {exc}")
+        logger.error(f"❌ Task failed for {eval_id}: {exc}")
         db.rollback()
         raise self.retry(countdown=60, exc=exc)
     finally:

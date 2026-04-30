@@ -1,6 +1,6 @@
+# backend/app/api/endpoints/evaluation.py
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from typing import Optional
 import hashlib
 from uuid import uuid4
 
@@ -23,11 +23,11 @@ async def evaluate_cyber_defensive(
     current_user = Depends(get_current_user),
     use_celery: bool = False
 ):
-    """Run defensive cyber evaluation - supports sync and async (Celery) modes."""
+    """Defensive cyber evaluation endpoint - supports sync and async modes."""
     eval_id = request.evaluation_id or str(uuid4())
 
     if use_celery:
-        # Async mode via Celery
+        # Async via Celery
         task = run_cyber_defensive_task.delay(
             payload=request.dict(),
             user_id=current_user.id
@@ -36,14 +36,14 @@ async def evaluate_cyber_defensive(
             "status": "queued",
             "evaluation_id": eval_id,
             "task_id": task.id,
-            "message": "Evaluation submitted to background worker"
+            "message": "Evaluation queued for background processing"
         }
 
-    # Synchronous mode
+    # Synchronous evaluation
     try:
         result = await verification_service.run_cyber_defensive_evaluation(request.dict())
 
-        # Save to database
+        # Persist result
         db_result = CyberEvaluationResult(
             evaluation_id=eval_id,
             user_id=current_user.id,
