@@ -4,6 +4,7 @@ import sys
 import logging
 from sqlalchemy import text
 from worker.celery_app import celery
+from worker.eval.runner import run_suite
 from worker.db import SessionLocal
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
