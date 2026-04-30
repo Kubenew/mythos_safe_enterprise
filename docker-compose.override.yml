@@ -8,5 +8,15 @@ services:
 
   worker:
     command: celery -A app.worker.worker worker --loglevel=DEBUG --concurrency=2
-    volumes:
-      - ./backend:/app
+
+  db:
+    ports:
+      - "5432:5432"
+
+  redis:
+    ports:
+      - "6379:6379"
+
+  flower:
+    ports:
+      - "5555:5555"
