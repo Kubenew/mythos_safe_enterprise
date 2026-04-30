@@ -45,7 +45,12 @@ class VulnerabilityScannerVerifier(BaseVerifier):
         remediation = self._evaluate_remediation(scan_result)
         calibration = self.calibration.score(response)
 
-        final_reward = 0.45 * accuracy + 0.25 * reasoning + 0.20 * remediation + 0.10 * calibration
+        final_reward = (
+            0.45 * accuracy
+            + 0.25 * reasoning
+            + 0.20 * remediation
+            + 0.10 * calibration
+        )
 
         return {
             "reward": round(max(0.0, min(1.0, final_reward)), 4),

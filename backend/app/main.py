@@ -3,10 +3,14 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
-from app.api.endpoints import auth, users, evaluation
+from app.core.database import init_db
+
+# Import routers from routes/ (not api.endpoints)
+from app.routes import auth, projects, models, datasets, jobs, reports, governance, incidents
+from app.routes import evaluation
 
 app = FastAPI(
-    title="Mythos Safe Enterprise",
+    title=settings.PROJECT_NAME,
     description="Enterprise platform for safe LLM evaluation and defensive cybersecurity (Mythos++)",
     version="1.0.0",
 )
@@ -20,14 +24,27 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Routers
-app.include_router(auth.router, prefix=settings.API_V1_STR, tags=["auth"])
-app.include_router(users.router, prefix=settings.API_V1_STR, tags=["users"])
+# Include routers
+app.include_router(auth.router, prefix="/auth", tags=["auth"])
+app.include_router(projects.router, prefix="/projects", tags=["projects"])
+app.include_router(models.router, prefix="/models", tags=["models"])
+app.include_router(datasets.router, prefix="/datasets", tags=["datasets"])
+app.include_router(jobs.router, prefix="/jobs", tags=["jobs"])
+app.include_router(reports.router, prefix="/reports", tags=["reports"])
+app.include_router(governance.router, prefix="/governance", tags=["governance"])
+app.include_router(incidents.router, prefix="/incidents", tags=["incidents"])
 app.include_router(evaluation.router, prefix=settings.API_V1_STR, tags=["evaluation"])
+
+
+@app.on_event("startup")
+def startup():
+    init_db()
+
 
 @app.get("/health", tags=["health"])
 async def health_check():
-    return {"status": "healthy"}
+    return {"status": "healthy", "service": "mythos-safe-enterprise"}
+
 
 @app.get("/", tags=["root"])
 async def root():
