@@ -1,5 +1,11 @@
 # Mythos Safe Enterprise
 
+[![PyPI - Version](https://img.shields.io/pypi/v/mythos-safe-enterprise)](https://pypi.org/project/mythos-safe-enterprise/)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/mythos-safe-enterprise)](https://pypi.org/project/mythos-safe-enterprise/)
+[![PyPI - License](https://img.shields.io/pypi/l/mythos-safe-enterprise)](https://github.com/Kubenew/mythos_safe_enterprise/blob/main/LICENSE)
+[![Downloads](https://pepy.tech/badge/mythos-safe-enterprise)](https://pepy.tech/project/mythos-safe-enterprise)
+[![GitHub Last Commit](https://img.shields.io/github/last-commit/Kubenew/mythos_safe_enterprise)](https://github.com/Kubenew/mythos_safe_enterprise)
+
 **Enterprise platform for safe LLM evaluation and defensive cybersecurity governance.**
 
 Built to support the safe development of frontier AI models (Mythos++ class), inspired by Anthropic’s Claude Mythos Preview System Card.
